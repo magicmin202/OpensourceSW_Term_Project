@@ -56,3 +56,13 @@ def load_model(path: str, device: str = "cpu") -> UNet2DModel:
     """save_model 로 저장한 모델을 불러온다."""
     return UNet2DModel.from_pretrained(path).to(device).eval()
 
+
+if __name__ == "__main__":
+    # 단독 테스트: python -m mnist_diffusion.model
+    model = build_unet()
+    x = torch.randn(4, 1, 32, 32)
+    t = torch.randint(0, 1000, (4,))
+    y = torch.tensor([0, 3, 7, NULL_CLASS])
+    out = model(x, t, class_labels=y).sample
+    print("output shape:", tuple(out.shape))
+    print(f"parameters: {count_parameters(model) / 1e6:.2f}M")
