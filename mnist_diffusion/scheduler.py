@@ -12,6 +12,7 @@ Classifier-Free Guidance 학습을 위해, 일정 확률(p_uncond)로 라벨을 
     loss = diffusion_loss(model, scheduler, x0, y)
 """
 import torch
+import torch.nn.functional as F
 from diffusers import DDIMScheduler, DDPMScheduler
 
 from .model import NULL_CLASS
@@ -30,3 +31,26 @@ def build_scheduler(kind: str = "ddpm",
         raise ValueError(f"kind must be one of {list(SCHEDULERS)}, got {kind!r}")
     return SCHEDULERS[kind](num_train_timesteps=num_train_timesteps,
                             beta_schedule=beta_schedule)
+
+
+def drop_labels(y: torch.Tensor, p_uncond: float) -> torch.Tensor:
+    """확률 p_uncond 로 라벨을 NULL_CLASS 로 바꾼다 (CFG 학습용)."""
+    if p_uncond <= 0:
+        return y
+    mask = torch.rand(y.shape, device=y.device) < p_uncond
+    return torch.where(mask, torch.full_like(y, NULL_CLASS), y)
+
+
+def diffusion_loss(model, scheduler, x0: torch.Tensor, y: torch.Tensor,
+                   p_uncond: float = 0.1) -> torch.Tensor:
+    """
+    x0: [B, 1, H, W], 값 범위 [-1, 1]
+    y : [B] 숫자 라벨 (0~9)
+    """
+    b = x0.shape[0]
+    noise = torch.randn_like(x0)
+    t = torch.randint(0, scheduler.config.num_train_timesteps, (b,),
+                      device=x0.device, dtype=torch.long)
+    x_t = scheduler.add_noise(x0, noise, t)          # forward process
+    eps_pred = model(x_t, t, class_labels=drop_labels(y, p_uncond)).sample
+    return F.mse_loss(eps_pred, noise)
