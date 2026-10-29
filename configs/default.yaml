@@ -1,0 +1,29 @@
+# 학습/샘플링 기본 설정 (명령행 인자로 일부 덮어쓸 수 있음)
+
+data:
+  root: data            # data/MNIST/raw 에 MNIST 파일이 있음
+  image_size: 32
+  num_workers: 0        # Windows 는 0 권장
+
+model:                  # 팀원 A
+  block_out_channels: [32, 64, 128]
+  layers_per_block: 2
+
+diffusion:              # 팀원 B
+  num_train_timesteps: 1000
+  beta_schedule: linear # linear | squaredcos_cap_v2
+  p_uncond: 0.1         # CFG 학습 시 라벨을 지울 확률
+
+train:                  # 팀원 C
+  epochs: 10
+  batch_size: 128
+  lr: 0.0002
+  seed: 42
+  device: auto          # auto | cuda | cpu | mps
+  output_dir: outputs
+  sample_every: 1       # 몇 epoch 마다 샘플 이미지를 저장할지
+
+sample:
+  sampler: ddim         # ddpm | ddim
+  num_inference_steps: 50
+  guidance_scale: 3.0
