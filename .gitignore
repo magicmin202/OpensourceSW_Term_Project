@@ -1,0 +1,24 @@
+# 데이터 / 학습 결과물 (용량이 커서 git 에 올리지 않음)
+data/
+outputs/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+
+# README 에 넣을 데모 이미지는 assets/ 에 따로 복사해서 올린다
+!assets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
