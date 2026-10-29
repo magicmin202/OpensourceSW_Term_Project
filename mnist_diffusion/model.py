@@ -42,3 +42,17 @@ def build_unet(image_size: int = 32,
     )
 
 
+def count_parameters(model: torch.nn.Module) -> int:
+    """학습 가능한 파라미터 수."""
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+def save_model(model: UNet2DModel, path: str) -> None:
+    """diffusers 형식(config.json + 가중치)으로 저장."""
+    model.save_pretrained(path)
+
+
+def load_model(path: str, device: str = "cpu") -> UNet2DModel:
+    """save_model 로 저장한 모델을 불러온다."""
+    return UNet2DModel.from_pretrained(path).to(device).eval()
+
