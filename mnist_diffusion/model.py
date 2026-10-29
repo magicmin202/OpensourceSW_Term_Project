@@ -18,3 +18,27 @@ from diffusers import UNet2DModel
 NUM_CLASSES = 10            # MNIST 숫자 0~9
 NULL_CLASS = NUM_CLASSES    # CFG 에서 "조건 없음"을 뜻하는 라벨 번호
 
+
+def build_unet(image_size: int = 32,
+               block_out_channels=(32, 64, 128),
+               layers_per_block: int = 2,
+               num_classes: int = NUM_CLASSES) -> UNet2DModel:
+    """MNIST(32x32, 흑백)에 맞춘 작은 클래스 조건부 U-Net 을 만든다."""
+    block_out_channels = tuple(block_out_channels)
+    n = len(block_out_channels)
+    # 해상도가 가장 낮은 단계에만 self-attention 을 넣어 계산량을 줄인다.
+    down_types = ("DownBlock2D",) * (n - 1) + ("AttnDownBlock2D",)
+    up_types = ("AttnUpBlock2D",) + ("UpBlock2D",) * (n - 1)
+
+    return UNet2DModel(
+        sample_size=image_size,
+        in_channels=1,
+        out_channels=1,
+        layers_per_block=layers_per_block,
+        block_out_channels=block_out_channels,
+        down_block_types=down_types,
+        up_block_types=up_types,
+        num_class_embeds=num_classes + 1,   # +1 = NULL_CLASS
+    )
+
+
